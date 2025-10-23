@@ -1,0 +1,35 @@
+# IDE files
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Data files
+*.csv
+*.json
+*.xlsx
+*.pkl
+
+# Model files
+*.joblib
+*.h5
+*.keras
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

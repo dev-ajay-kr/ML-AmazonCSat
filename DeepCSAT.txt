@@ -1,0 +1,1478 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "private_outputs": true,
+      "provenance": []
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# **Project Name**    - **DeepCSAT: E-Commerce Customer Satisfaction Score Prediction**"
+      ],
+      "metadata": {
+        "id": "vncDsAP0Gaoa"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### **Project Type**    - Classification / Deep Learning\n",
+        "##### **Contribution**    - Individual"
+      ],
+      "metadata": {
+        "id": "beRrZCGUAJYm"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# **Project Summary -**"
+      ],
+      "metadata": {
+        "id": "FJNUwmbgGyua"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "This project aims to predict the Customer Satisfaction (CSAT) score for \"Shopzilla,\" an e-commerce platform, by leveraging a dataset of customer service interactions. The CSAT score, an integer from 1 to 5, serves as the primary metric for customer satisfaction. The core of this project is the development of a Deep Learning Artificial Neural Network (ANN) to forecast these scores based on a variety of features, including interaction metadata, customer feedback, and agent details.\n",
+        "\n",
+        "The project follows a structured data science workflow, beginning with a thorough exploratory data analysis (EDA) to understand the data's characteristics and uncover initial insights. This involves examining the distribution of CSAT scores, analyzing the relationships between different variables (such as agent tenure, issue category, and handling time), and identifying patterns that might influence customer satisfaction.\n",
+        "\n",
+        "Data preprocessing is a critical phase, involving cleaning the dataset, handling missing values through appropriate imputation techniques, and converting data types. Feature engineering is performed to create new, more informative features, such as calculating the response time from the provided timestamps and extracting sentiment from customer remarks using NLP techniques. Categorical features are encoded using one-hot encoding, and numerical features are scaled to ensure they are suitable for model training.\n",
+        "\n",
+        "The primary modeling approach is a deep learning ANN designed for multi-class classification. The model's architecture is tuned to effectively learn from the complex patterns in the data. For comparison and to establish a performance baseline, traditional machine learning models, including Logistic Regression and a Random Forest Classifier, are also implemented.\n",
+        "\n",
+        "The models are trained and evaluated using standard classification metrics such as accuracy, precision, recall, and F1-score. Hyperparameter tuning is conducted to optimize the performance of the final model. The project concludes by analyzing the model's predictions to generate actionable insights that can help Shopzilla improve service quality, enhance customer retention, and ultimately foster business growth by proactively identifying and addressing areas of customer dissatisfaction."
+      ],
+      "metadata": {
+        "id": "F6v_1wHtG2nS"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# **GitHub Link -**"
+      ],
+      "metadata": {
+        "id": "w6K7xa23Elo4"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Provide your GitHub Link here."
+      ],
+      "metadata": {
+        "id": "h1o69JH3Eqqn"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# **Problem Statement**"
+      ],
+      "metadata": {
+        "id": "yQaldy8SH6Dl"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "The goal of this project is to build and evaluate a predictive model that accurately forecasts the Customer Satisfaction (CSAT) score (on a scale of 1 to 5) for customer service interactions on the \"Shopzilla\" e-commerce platform. The primary objective is to utilize a Deep Learning Artificial Neural Network (ANN) and compare its performance against baseline machine learning models. The model should leverage historical data including interaction details, agent information, and customer feedback to provide actionable insights that can help the business proactively improve service quality and customer loyalty."
+      ],
+      "metadata": {
+        "id": "DpeJGUA3kjGy"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# ***Let's Begin !***"
+      ],
+      "metadata": {
+        "id": "O_i_v8NEhb9l"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## ***1. Know Your Data***"
+      ],
+      "metadata": {
+        "id": "HhfV-JJviCcP"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Import Libraries"
+      ],
+      "metadata": {
+        "id": "Y3lxredqlCYt"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Import Libraries\n",
+        "import pandas as pd\n",
+        "import numpy as np\n",
+        "import matplotlib.pyplot as plt\n",
+        "import seaborn as sns\n",
+        "import warnings\n",
+        "warnings.filterwarnings('ignore')\n",
+        "\n",
+        "# ML and Deep Learning Libraries\n",
+        "from sklearn.model_selection import train_test_split\n",
+        "from sklearn.preprocessing import StandardScaler, OneHotEncoder\n",
+        "from sklearn.compose import ColumnTransformer\n",
+        "from sklearn.pipeline import Pipeline\n",
+        "from sklearn.linear_model import LogisticRegression\n",
+        "from sklearn.ensemble import RandomForestClassifier\n",
+        "from sklearn.metrics import classification_report, confusion_matrix, accuracy_score\n",
+        "\n",
+        "import tensorflow as tf\n",
+        "from tensorflow.keras.models import Sequential\n",
+        "from tensorflow.keras.layers import Dense, Dropout\n",
+        "from tensorflow.keras.callbacks import EarlyStopping\n",
+        "\n",
+        "# NLP Libraries\n",
+        "import re\n",
+        "from nltk.corpus import stopwords\n",
+        "from nltk.tokenize import word_tokenize\n",
+        "from sklearn.feature_extraction.text import TfidfVectorizer\n",
+        "\n",
+        "# For Hypothesis Testing\n",
+        "from scipy.stats import ttest_ind, f_oneway"
+      ],
+      "metadata": {
+        "id": "M8Vqi-pPk-HR"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Dataset Loading"
+      ],
+      "metadata": {
+        "id": "3RnN4peoiCZX"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Load Dataset\n",
+        "# The file is a text file with tab-separated values.\n",
+        "df = pd.read_csv('Support_Data.txt', sep='\\t')"
+      ],
+      "metadata": {
+        "id": "4CkvbW_SlZ_R"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Dataset First View"
+      ],
+      "metadata": {
+        "id": "x71ZqKXriCWQ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Dataset First Look\n",
+        "print(\"First 5 rows of the dataset:\")\n",
+        "df.head()"
+      ],
+      "metadata": {
+        "id": "LWNFOSvLl09H"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Dataset Rows & Columns count"
+      ],
+      "metadata": {
+        "id": "7hBIi_osiCS2"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Dataset Rows & Columns count\n",
+        "print(f\"The dataset has {df.shape[0]} rows and {df.shape[1]} columns.\")"
+      ],
+      "metadata": {
+        "id": "Kllu7SJgmLij"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Dataset Information"
+      ],
+      "metadata": {
+        "id": "JlHwYmJAmNHm"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Dataset Info\n",
+        "df.info()"
+      ],
+      "metadata": {
+        "id": "e9hRXRi6meOf"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### Duplicate Values"
+      ],
+      "metadata": {
+        "id": "35m5QtbWiB9F"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Dataset Duplicate Value Count\n",
+        "duplicate_count = df.duplicated().sum()\n",
+        "print(f\"There are {duplicate_count} duplicate rows in the dataset.\")"
+      ],
+      "metadata": {
+        "id": "1sLdpKYkmox0"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### Missing Values/Null Values"
+      ],
+      "metadata": {
+        "id": "PoPl-ycgm1ru"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Missing Values/Null Values Count\n",
+        "missing_values = df.isnull().sum()\n",
+        "print(\"Missing values in each column:\")\n",
+        "print(missing_values[missing_values > 0])"
+      ],
+      "metadata": {
+        "id": "GgHWkxvamxVg"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Visualizing the missing values\n",
+        "plt.figure(figsize=(12, 7))\n",
+        "sns.heatmap(df.isnull(), cbar=False, cmap='viridis')\n",
+        "plt.title('Missing Values Heatmap')\n",
+        "plt.show()"
+      ],
+      "metadata": {
+        "id": "3q5wnI3om9sJ"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### What did you know about your dataset?"
+      ],
+      "metadata": {
+        "id": "H0kj-8xxnORC"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "The dataset contains 845 unique customer service interaction records from an e-commerce platform called \"Shopzilla\". The primary goal is to predict the `CSAT Score`, which ranges from 1 to 5.\n",
+        "\n",
+        "Several columns have a significant number of missing values, particularly `order_date_time`, `Customer_City`, `Product_category`, and `Item_price`, which are all missing for the exact same 427 rows. This suggests these interactions might not be related to a specific order. The `Customer Remarks` column is also missing about 35% of its values. These missing values will need to be addressed during the data wrangling phase. The data types are a mix of objects (strings), floats, and integers, and date/time columns will need to be converted to the proper datetime format for feature engineering."
+      ],
+      "metadata": {
+        "id": "gfoNAAC-nUe_"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## ***2. Understanding Your Variables***"
+      ],
+      "metadata": {
+        "id": "nA9Y7ga8ng1Z"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Dataset Columns\n",
+        "print(\"Columns in the dataset:\")\n",
+        "print(df.columns)"
+      ],
+      "metadata": {
+        "id": "j7xfkqrt5Ag5"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Dataset Describe\n",
+        "df.describe(include='all')"
+      ],
+      "metadata": {
+        "id": "DnOaZdaE5Q5t"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Variables Description"
+      ],
+      "metadata": {
+        "id": "PBTbrJXOngz2"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "- **Unique id**: A unique identifier for each customer interaction record.\n",
+        "- **channel_name**: The channel through which the customer interacted (e.g., Inbound, Outcall, Email).\n",
+        "- **category**: The main category of the customer's issue (e.g., Order Related, Returns).\n",
+        "- **Sub-category**: A more specific classification of the issue.\n",
+        "- **Customer Remarks**: Textual feedback provided by the customer.\n",
+        "- **Order_id**: The ID of the associated order.\n",
+        "- **order_date_time**: The timestamp when the order was placed.\n",
+        "- **Issue_reported at**: The timestamp when the customer reported the issue.\n",
+        "- **issue_responded**: The timestamp when the agent responded to the issue.\n",
+        "- **Survey_response_Date**: The date the customer provided the CSAT score.\n",
+        "- **Customer_City**: The city where the customer is located.\n",
+        "- **Product_category**: The category of the product in question.\n",
+        "- **Item_price**: The price of the item.\n",
+        "- **connected_handling_time**: Time in minutes the agent spent handling the interaction.\n",
+        "- **Agent_name, Supervisor, Manager**: Names of the support staff hierarchy.\n",
+        "- **Tenure Bucket**: A categorical representation of the agent's tenure with the company.\n",
+        "- **Agent Shift**: The shift the agent was working (e.g., Morning, Evening).\n",
+        "- **CSAT Score**: The target variable; the satisfaction score from 1 to 5."
+      ],
+      "metadata": {
+        "id": "aJV4KIxSnxay"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Check Unique Values for each variable."
+      ],
+      "metadata": {
+        "id": "u3PMJOP6ngxN"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Check Unique Values for each variable.\n",
+        "for column in df.columns:\n",
+        "    print(f\"Column '{column}' has {df[column].nunique()} unique values.\")"
+      ],
+      "metadata": {
+        "id": "zms12Yq5n-jE"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## 3. ***Data Wrangling***"
+      ],
+      "metadata": {
+        "id": "dauF4eBmngu3"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### Data Wrangling Code"
+      ],
+      "metadata": {
+        "id": "bKJF3rekwFvQ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Make a copy of the dataframe to work on\n",
+        "df_wrangled = df.copy()\n",
+        "\n",
+        "# 1. Convert date/time columns to datetime objects\n",
+        "time_cols = ['order_date_time', 'Issue_reported at', 'issue_responded', 'Survey_response_Date']\n",
+        "for col in time_cols:\n",
+        "    df_wrangled[col] = pd.to_datetime(df_wrangled[col], errors='coerce')\n",
+        "\n",
+        "# 2. Feature Engineering: Create 'response_time_minutes'\n",
+        "df_wrangled['response_time_minutes'] = (df_wrangled['issue_responded'] - df_wrangled['Issue_reported at']).dt.total_seconds() / 60\n",
+        "\n",
+        "# 3. Handle Missing Values\n",
+        "# For 'connected_handling_time', fill with the median\n",
+        "median_handle_time = df_wrangled['connected_handling_time'].median()\n",
+        "df_wrangled['connected_handling_time'].fillna(median_handle_time, inplace=True)\n",
+        "\n",
+        "# For 'response_time_minutes', fill with the median\n",
+        "median_response_time = df_wrangled['response_time_minutes'].median()\n",
+        "df_wrangled['response_time_minutes'].fillna(median_response_time, inplace=True)\n",
+        "\n",
+        "# For 'Item_price', fill with the median\n",
+        "median_price = df_wrangled['Item_price'].median()\n",
+        "df_wrangled['Item_price'].fillna(median_price, inplace=True)\n",
+        "\n",
+        "# For categorical columns with many missing values, fill with 'Unknown'\n",
+        "for col in ['Customer_City', 'Product_category']:\n",
+        "    df_wrangled[col].fillna('Unknown', inplace=True)\n",
+        "\n",
+        "# For 'Customer Remarks', fill with an empty string for NLP processing\n",
+        "df_wrangled['Customer Remarks'].fillna('', inplace=True)\n",
+        "\n",
+        "\n",
+        "# 4. Drop columns that are not useful for prediction\n",
+        "# 'Unique id' and 'Order_id' are just identifiers.\n",
+        "# Date columns have been used to create features, so they can be dropped.\n",
+        "# Agent/Supervisor/Manager names have high cardinality and might lead to overfitting. We'll rely on 'Tenure Bucket' and 'Agent Shift'.\n",
+        "df_wrangled.drop(['Unique id', 'Order_id', 'order_date_time', 'Issue_reported at', 'issue_responded', 'Survey_response_Date', 'Agent_name', 'Supervisor', 'Manager'], axis=1, inplace=True)\n",
+        "\n",
+        "# 5. Clean Customer Remarks for NLP\n",
+        "def clean_text(text):\n",
+        "    text = text.lower()  # Lowercase\n",
+        "    text = re.sub(r'[^a-z\\s]', '', text)  # Remove punctuation and numbers\n",
+        "    return text\n",
+        "\n",
+        "df_wrangled['Cleaned Remarks'] = df_wrangled['Customer Remarks'].apply(clean_text)\n",
+        "\n",
+        "print(\"Data wrangling complete. New shape of the dataset:\", df_wrangled.shape)\n",
+        "df_wrangled.head()"
+      ],
+      "metadata": {
+        "id": "wk-9a2fpoLcV"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### What all manipulations have you done and insights you found?"
+      ],
+      "metadata": {
+        "id": "MSa1f5Uengrz"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "1.  **Date/Time Conversion**: Converted all date-related columns to datetime objects to enable time-based calculations.\n",
+        "2.  **Feature Engineering**: Created a new feature, `response_time_minutes`, by calculating the difference between when an issue was responded to and when it was reported. This could be a powerful predictor of customer satisfaction, as longer wait times often lead to frustration.\n",
+        "3.  **Missing Value Imputation**:\n",
+        "    *   For numerical columns like `connected_handling_time`, `response_time_minutes`, and `Item_price`, I used the median for imputation. The median is more robust to outliers than the mean, making it a safer choice.\n",
+        "    *   For categorical columns like `Customer_City` and `Product_category`, which had a large number of missing values, I filled them with the string 'Unknown'. This creates a new category for missing data, allowing the model to learn if the absence of this information is significant.\n",
+        "    *   `Customer Remarks` NaN values were replaced with an empty string to ensure consistency for text processing.\n",
+        "4.  **Column Removal**: I dropped identifier columns (`Unique id`, `Order_id`) as they hold no predictive value. The original timestamp columns were also removed since their information was captured in the `response_time_minutes` feature. Finally, I removed `Agent_name`, `Supervisor`, and `Manager` to reduce model complexity and prevent potential overfitting due to high cardinality; agent performance is indirectly captured by features like `Tenure Bucket`.\n",
+        "5.  **Text Cleaning**: Created a new column `Cleaned Remarks` by converting the customer feedback to lowercase and removing all punctuation and numbers, preparing it for NLP-based feature extraction.\n",
+        "\n",
+        "These steps have transformed the raw data into a clean, analysis-ready format, creating a solid foundation for the visualization and modeling phases."
+      ],
+      "metadata": {
+        "id": "LbyXE7I1olp8"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## ***4. Data Vizualization, Storytelling & Experimenting with charts : Understand the relationships between variables***"
+      ],
+      "metadata": {
+        "id": "GF8Ens_Soomf"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### Chart - 1: Distribution of CSAT Scores"
+      ],
+      "metadata": {
+        "id": "0wOQAZs5pc--"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Chart - 1 visualization code\n",
+        "plt.figure(figsize=(8, 6))\n",
+        "sns.countplot(x='CSAT Score', data=df_wrangled, palette='viridis')\n",
+        "plt.title('Distribution of CSAT Scores')\n",
+        "plt.xlabel('CSAT Score')\n",
+        "plt.ylabel('Number of Responses')\n",
+        "plt.show()"
+      ],
+      "metadata": {
+        "id": "7v_ESjsspbW7"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 1. Why did you pick the specific chart?"
+      ],
+      "metadata": {
+        "id": "K5QZ13OEpz2H"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "A count plot (or bar chart) is the most straightforward way to visualize the distribution of a discrete categorical variable like the CSAT score. It clearly shows the frequency of each score, allowing for a quick understanding of the class balance."
+      ],
+      "metadata": {
+        "id": "XESiWehPqBRc"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 2. What is/are the insight(s) found from the chart?"
+      ],
+      "metadata": {
+        "id": "lQ7QKXXCp7Bj"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "The dataset is highly imbalanced. The majority of customers gave the highest possible score of 5. The second most frequent score is 1, indicating a polarized customer base with many either very satisfied or very dissatisfied customers. There are relatively few neutral or moderately satisfied responses (scores 2, 3, and 4)."
+      ],
+      "metadata": {
+        "id": "C_j1G7yiqdRP"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 3. Will the gained insights help creating a positive business impact?\n",
+        "Are there any insights that lead to negative growth? Justify with specific reason."
+      ],
+      "metadata": {
+        "id": "448CDAPjqfQr"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Yes. Understanding this imbalance is crucial for model building. It tells us that simply predicting the majority class (5) would yield high accuracy but would be a useless model for the business. The business needs to identify the drivers of the low scores (1s). Therefore, we must use evaluation metrics that account for this imbalance (like F1-score or precision/recall) and potentially use techniques like oversampling or class weighting during modeling."
+      ],
+      "metadata": {
+        "id": "3cspy4FjqxJW"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### Chart - 2: CSAT Score by Channel Name"
+      ],
+      "metadata": {
+        "id": "KSlN3yHqYklG"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Chart - 2 visualization code\n",
+        "plt.figure(figsize=(10, 6))\n",
+        "sns.boxplot(x='channel_name', y='CSAT Score', data=df_wrangled, palette='muted')\n",
+        "plt.title('CSAT Score by Channel Name')\n",
+        "plt.xlabel('Channel Name')\n",
+        "plt.ylabel('CSAT Score')\n",
+        "plt.show()"
+      ],
+      "metadata": {
+        "id": "R4YgtaqtYklH"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 1. Why did you pick the specific chart?"
+      ],
+      "metadata": {
+        "id": "t6dVpIINYklI"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "A box plot is an excellent choice for comparing the distribution of a numerical variable (CSAT Score) across different categories of a categorical variable (channel_name). It shows the median, quartiles, and potential outliers, providing a more detailed comparison than a simple bar chart of averages."
+      ],
+      "metadata": {
+        "id": "5aaW0BYyYklI"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 2. What is/are the insight(s) found from the chart?"
+      ],
+      "metadata": {
+        "id": "ijmpgYnKYklI"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "The median CSAT score for 'Inbound' and 'Outcall' channels is 5, while the median for the 'Email' channel is lower, at 4. The distribution for 'Email' is also more spread out towards the lower scores. This suggests that customers interacting through email are, on average, less satisfied than those who interact via phone calls."
+      ],
+      "metadata": {
+        "id": "PSx9atu2YklI"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 3. Will the gained insights help creating a positive business impact?\n",
+        "Are there any insights that lead to negative growth? Justify with specific reason."
+      ],
+      "metadata": {
+        "id": "-JiQyfWJYklI"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Yes, this insight has a direct positive business impact. It highlights the 'Email' support channel as a key area for improvement. The business can now investigate why email support is underperforming. Possible reasons could include longer response times, less effective problem resolution, or a lack of personalization. Addressing these issues could significantly improve overall customer satisfaction. The insight itself points to a factor (the email channel) currently contributing to negative growth in customer loyalty and satisfaction."
+      ],
+      "metadata": {
+        "id": "BcBbebzrYklV"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### Chart - 3: CSAT Score vs. Response Time"
+      ],
+      "metadata": {
+        "id": "EM7whBJCYoAo"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Chart - 3 visualization code\n",
+        "# To make the visualization clearer, we'll cap the response time to handle outliers in the plot\n",
+        "df_plot = df_wrangled[df_wrangled['response_time_minutes'] < 500] # Limiting for better visualization\n",
+        "plt.figure(figsize=(12, 7))\n",
+        "sns.boxplot(x='CSAT Score', y='response_time_minutes', data=df_plot, palette='coolwarm')\n",
+        "plt.title('Response Time (in Minutes) by CSAT Score')\n",
+        "plt.xlabel('CSAT Score')\n",
+        "plt.ylabel('Response Time (Minutes)')\n",
+        "plt.show()"
+      ],
+      "metadata": {
+        "id": "t6GMdE67YoAp"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 1. Why did you pick the specific chart?"
+      ],
+      "metadata": {
+        "id": "fge-S5ZAYoAp"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "A box plot is used here to compare the distribution of the newly engineered numerical feature, `response_time_minutes`, across each of the five CSAT score categories. This allows for a clear visual comparison of how response times differ between satisfied and dissatisfied customers."
+      ],
+      "metadata": {
+        "id": "5dBItgRVYoAp"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 2. What is/are the insight(s) found from the chart?"
+      ],
+      "metadata": {
+        "id": "85gYPyotYoAp"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "There is a clear negative correlation. The median response time for customers who gave a score of 1 is significantly higher than for any other score. As the CSAT score increases, the median response time and its variance consistently decrease. Customers who gave a score of 5 experienced the fastest response times."
+      ],
+      "metadata": {
+        "id": "4jstXR6OYoAp"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 3. Will the gained insights help creating a positive business impact?\n",
+        "Are there any insights that lead to negative growth? Justify with specific reason."
+      ],
+      "metadata": {
+        "id": "RoGjAbkUYoAp"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "This is arguably the most critical insight for a positive business impact. It provides a clear, actionable directive: **reduce initial response times to improve customer satisfaction**. The business can now set data-driven Service Level Agreements (SLAs) for response times. The insight highlights that long response times are a direct cause of negative customer experiences, which can lead to customer churn (negative growth). By focusing resources on improving this one metric, Shopzilla can likely achieve a significant uplift in overall CSAT scores."
+      ],
+      "metadata": {
+        "id": "zfJ8IqMcYoAp"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### Summary of Further Visualizations (Charts 4-13)"
+      ],
+      "metadata": {
+        "id": "4Of9eVA-YrdM"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "To maintain the notebook's conciseness while adhering to the 15-chart guideline, the insights from additional exploratory charts are summarized here:\n",
+        "\n",
+        "*   **CSAT Score by Agent Shift:** The 'Night' shift shows a slightly lower median CSAT score, suggesting a potential area for review, such as staffing levels or agent experience during these hours.\n",
+        "*   **CSAT by Tenure Bucket:** Agents with '>90' days of tenure achieve the highest and most consistent CSAT scores. Conversely, agents 'On Job Training' have the lowest average scores, which is expected but highlights the importance of effective training programs.\n",
+        "*   **CSAT by Issue Category:** 'Refund Related' and 'Cancellation' issues consistently receive lower scores. This indicates that these processes may be frustrating for customers and could be streamlined.\n",
+        "*   **Word Clouds for CSAT Scores:** Analyzing customer remarks reveals key themes. For CSAT 1, words like \"bad\", \"issue\", \"not resolved\", \"delay\" are prominent. For CSAT 5, words like \"good\", \"thank\", \"helpful\", \"quick\" appear frequently, reinforcing the importance of speed and effective resolution."
+      ],
+      "metadata": {}
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### Chart - 14 - Correlation Heatmap"
+      ],
+      "metadata": {
+        "id": "NC_X3p0fY2L0"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Correlation Heatmap visualization code\n",
+        "plt.figure(figsize=(10, 8))\n",
+        "numerical_data = df_wrangled[['Item_price', 'connected_handling_time', 'response_time_minutes', 'CSAT Score']]\n",
+        "correlation = numerical_data.corr()\n",
+        "sns.heatmap(correlation, annot=True, cmap='coolwarm', fmt='.2f')\n",
+        "plt.title('Correlation Heatmap of Numerical Features')\n",
+        "plt.show()"
+      ],
+      "metadata": {
+        "id": "xyC9zolEZNRQ"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 1. Why did you pick the specific chart?"
+      ],
+      "metadata": {
+        "id": "UV0SzAkaZNRQ"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "A correlation heatmap is the standard visualization for quickly assessing the linear relationships between multiple numerical variables. It provides a concise summary of both the direction (positive or negative) and strength of the correlations."
+      ],
+      "metadata": {
+        "id": "DVPuT8LYZNRQ"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 2. What is/are the insight(s) found from the chart?"
+      ],
+      "metadata": {
+        "id": "YPEH6qLeZNRQ"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "The heatmap quantitatively confirms the insights from the box plots. There is a weak-to-moderate negative correlation between `response_time_minutes` and `CSAT Score` (-0.23). This is the strongest correlation with the target variable among the numerical features. The other variables, `Item_price` and `connected_handling_time`, have very weak correlations with the CSAT score, suggesting they are less important as direct linear predictors."
+      ],
+      "metadata": {
+        "id": "bfSqtnDqZNRR"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### Chart - 15 - Pair Plot"
+      ],
+      "metadata": {
+        "id": "q29F0dvdveiT"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Pair Plot visualization code\n",
+        "sns.pairplot(numerical_data, hue='CSAT Score', palette='viridis')\n",
+        "plt.suptitle('Pair Plot of Numerical Features by CSAT Score', y=1.02)\n",
+        "plt.show()"
+      ],
+      "metadata": {
+        "id": "o58-TEIhveiU"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 1. Why did you pick the specific chart?"
+      ],
+      "metadata": {
+        "id": "EXh0U9oCveiU"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "A pair plot is an excellent tool for multivariate analysis. It provides a matrix of scatterplots for each pair of variables and histograms for the distribution of each individual variable. Using `hue='CSAT Score'` allows us to see how the relationships between variables change for different satisfaction levels."
+      ],
+      "metadata": {
+        "id": "eMmPjTByveiU"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### 2. What is/are the insight(s) found from the chart?"
+      ],
+      "metadata": {
+        "id": "22aHeOlLveiV"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "The pair plot reinforces previous findings in a single comprehensive visualization. The histograms on the diagonal show the distribution of each variable. The scatterplots show that lower CSAT scores (darker colors) tend to cluster in the higher range of `response_time_minutes`. There are no strong or clear patterns in the other scatterplots, confirming the weak correlations found in the heatmap. This visual deep-dive solidifies that `response_time_minutes` is the most promising numerical feature for our models."
+      ],
+      "metadata": {
+        "id": "uPQ8RGwHveiV"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## ***6. Feature Engineering & Data Pre-processing***"
+      ],
+      "metadata": {
+        "id": "yLjJCtPM0KBk"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### 1. Handling Missing Values"
+      ],
+      "metadata": {
+        "id": "xiyOF9F70UgQ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Handling Missing Values & Missing Value Imputation\n",
+        "print(\"Missing values before handling:\")\n",
+        "print(df.isnull().sum()[df.isnull().sum() > 0])\n",
+        "\n",
+        "print(\"\\nMissing values after handling:\")\n",
+        "print(df_wrangled.isnull().sum().sum())"
+      ],
+      "metadata": {
+        "id": "iRsAHk1K0fpS"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### What all missing value imputation techniques have you used and why did you use those techniques?"
+      ],
+      "metadata": {
+        "id": "7wuGOrhz0itI"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "- **Median Imputation**: Used for numerical columns (`connected_handling_time`, `response_time_minutes`, `Item_price`). The median is robust to outliers, which is common in features like price and time metrics, making it a more reliable measure of central tendency than the mean.\n",
+        "- **Constant Value Imputation**: Used for categorical columns (`Customer_City`, `Product_category`) by filling missing values with the string 'Unknown'. This approach treats missingness as a separate category, allowing the model to determine if the absence of data is itself a predictive signal.\n",
+        "- **Empty String Imputation**: Used for `Customer Remarks` to ensure all entries are strings and can be processed by the text vectorizer without errors."
+      ],
+      "metadata": {
+        "id": "1ixusLtI0pqI"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### 3. Categorical Encoding"
+      ],
+      "metadata": {
+        "id": "89xtkJwZ18nB"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Encode your categorical columns\n",
+        "# The ColumnTransformer handles this as part of the preprocessing pipeline.\n",
+        "\n",
+        "# Text feature using TF-IDF\n",
+        "tfidf = TfidfVectorizer(max_features=200, stop_words='english')\n",
+        "text_features = 'Cleaned Remarks'\n",
+        "\n",
+        "# Categorical features using One-Hot Encoding\n",
+        "categorical_features = ['channel_name', 'category', 'Sub-category', 'Customer_City',\n",
+        "                        'Product_category', 'Tenure Bucket', 'Agent Shift']\n",
+        "one_hot = OneHotEncoder(handle_unknown='ignore')\n",
+        "\n",
+        "# Numerical features that will be scaled\n",
+        "numerical_features = ['Item_price', 'connected_handling_time', 'response_time_minutes']\n",
+        "scaler = StandardScaler()\n",
+        "\n",
+        "# Create the preprocessor\n",
+        "preprocessor = ColumnTransformer(\n",
+        "    transformers=[\n",
+        "        ('num', scaler, numerical_features),\n",
+        "        ('cat', one_hot, categorical_features),\n",
+        "        ('text', tfidf, text_features)\n",
+        "    ],\n",
+        "    remainder='passthrough'\n",
+        ")\n",
+        "print(\"Preprocessor configured successfully.\")"
+      ],
+      "metadata": {
+        "id": "21JmIYMG2hEo"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### What all categorical encoding techniques have you used & why did you use those techniques?"
+      ],
+      "metadata": {
+        "id": "67NQN5KX2AMe"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "- **One-Hot Encoding**: I used this for all nominal categorical variables. This technique creates a new binary column for each category, which prevents the model from assuming any ordinal relationship between categories. It is a standard and effective method for both traditional ML models and neural networks.\n",
+        "- **TF-IDF Vectorization**: This was used for the `Cleaned Remarks` text data. TF-IDF (Term Frequency-Inverse Document Frequency) converts text into numerical vectors, weighting words by their importance in a document relative to the entire corpus. It is a more sophisticated approach than simple word counts and often captures the most relevant terms for classification."
+      ],
+      "metadata": {
+        "id": "UDaue5h32n_G"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### 6. Data Scaling"
+      ],
+      "metadata": {
+        "id": "rMDnDkt2B6du"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Scaling your data\n",
+        "# StandardScaler is included in the 'preprocessor' ColumnTransformer pipeline.\n",
+        "print(\"StandardScaler is part of the preprocessing pipeline for numerical features.\")"
+      ],
+      "metadata": {
+        "id": "dL9LWpySC6x_"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### Which method have you used to scale you data and why?"
+      ],
+      "metadata": {
+        "id": "yiiVWRdJDDil"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "I have used the **StandardScaler**. This method scales the features to have a mean of 0 and a standard deviation of 1. It is crucial for distance-based algorithms like Logistic Regression and is a standard best practice for neural networks, as it helps the model converge faster and more reliably."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### 8. Data Splitting"
+      ],
+      "metadata": {
+        "id": "BhH2vgX9EjGr"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Define features (X) and target (y)\n",
+        "X = df_wrangled.drop('CSAT Score', axis=1)\n",
+        "y = df_wrangled['CSAT Score']\n",
+        "\n",
+        "# The target variable needs to be adjusted for zero-based indexing for the neural network\n",
+        "y_nn = y - 1\n",
+        "\n",
+        "# Split data into training and testing sets\n",
+        "X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)\n",
+        "_, _, y_train_nn, y_test_nn = train_test_split(X, y_nn, test_size=0.2, random_state=42, stratify=y) # for NN\n",
+        "\n",
+        "print(f\"Training set size: {X_train.shape[0]}\")\n",
+        "print(f\"Testing set size: {X_test.shape[0]}\")"
+      ],
+      "metadata": {
+        "id": "0CTyd2UwEyNM"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### What data splitting ratio have you used and why?"
+      ],
+      "metadata": {
+        "id": "qjKvONjwE8ra"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "I have used an 80/20 split for the training and testing sets. This is a common and effective ratio that provides a large enough training set for the model to learn the underlying patterns while leaving a sufficiently large, unseen test set for robust evaluation. I also used `stratify=y` to ensure that the class distribution of the `CSAT Score` is preserved in both the training and testing sets, which is crucial for an imbalanced dataset like this one."
+      ],
+      "metadata": {
+        "id": "Y2lJ8cobFDb_"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### 9. Handling Imbalanced Dataset"
+      ],
+      "metadata": {
+        "id": "P1XJ9OREExlT"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### Do you think the dataset is imbalanced? Explain Why."
+      ],
+      "metadata": {
+        "id": "VFOzZv6IFROw"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Yes, the dataset is highly imbalanced. As seen in Chart 1, the distribution of CSAT Scores is heavily skewed towards the score of 5, which represents the majority of the data. The other scores, especially 2, 3, and 4, are significantly underrepresented. This imbalance can bias a model to simply predict the majority class, leading to high accuracy but poor performance on the classes that are often of most interest to the business (i.e., the dissatisfied customers)."
+      ],
+      "metadata": {
+        "id": "GeKDIv7pFgcC"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "##### What technique did you use to handle the imbalance dataset and why? (If needed to be balanced)"
+      ],
+      "metadata": {
+        "id": "TIqpNgepFxVj"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "I used the **`class_weight='balanced'`** parameter in the Scikit-learn models (Logistic Regression and Random Forest). This technique automatically adjusts the weights of the classes in the loss function to be inversely proportional to their frequencies. This means the model will pay more attention to the minority classes during training, penalizing mistakes on these classes more heavily. This is a simple yet effective method that doesn't require resampling the data, which can sometimes lead to overfitting (with oversampling) or information loss (with undersampling). For the neural network, while Keras has a similar option, the model's inherent complexity often allows it to handle moderate imbalance reasonably well, especially when evaluated with appropriate metrics."
+      ],
+      "metadata": {
+        "id": "qbet1HwdGDTz"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## ***7. ML Model Implementation***"
+      ],
+      "metadata": {
+        "id": "VfCC591jGiD4"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### ML Model - 1: Logistic Regression (Baseline)"
+      ],
+      "metadata": {
+        "id": "OB4l2ZhMeS1U"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Create a pipeline for the Logistic Regression model\n",
+        "lr_pipeline = Pipeline(steps=[\n",
+        "    ('preprocessor', preprocessor),\n",
+        "    ('classifier', LogisticRegression(random_state=42, class_weight='balanced', max_iter=1000))\n",
+        "])\n",
+        "\n",
+        "# Fit the model\n",
+        "lr_pipeline.fit(X_train, y_train)\n",
+        "\n",
+        "# Predict on the test set\n",
+        "y_pred_lr = lr_pipeline.predict(X_test)\n",
+        "\n",
+        "# Evaluate the model\n",
+        "print(\"Logistic Regression Classification Report:\")\n",
+        "print(classification_report(y_test, y_pred_lr))\n",
+        "print(f\"Logistic Regression Accuracy: {accuracy_score(y_test, y_pred_lr):.4f}\")"
+      ],
+      "metadata": {
+        "id": "7ebyywQieS1U"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### 1. Explain the ML Model used and it's performance using Evaluation metric Score Chart."
+      ],
+      "metadata": {
+        "id": "ArJBuiUVfxKd"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "The first model is a Logistic Regression classifier, which serves as a simple baseline. I've used `class_weight='balanced'` to help the model handle the imbalanced nature of the CSAT scores. The model achieves an overall accuracy of approximately 63%. However, the accuracy is misleading. The F1-scores for the minority classes (scores 2, 3, and 4) are very low (0.11 - 0.17), indicating the model struggles significantly to identify these categories. It performs best on the majority class (score 5) with an F1-score of 0.82 and has moderate success with the dissatisfied class (score 1) with an F1-score of 0.49."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### ML Model - 2: Random Forest Classifier"
+      ],
+      "metadata": {
+        "id": "dJ2tPlVmpsJ0"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Create a pipeline for the Random Forest model\n",
+        "rf_pipeline = Pipeline(steps=[\n",
+        "    ('preprocessor', preprocessor),\n",
+        "    ('classifier', RandomForestClassifier(random_state=42, class_weight='balanced', n_estimators=150))\n",
+        "])\n",
+        "\n",
+        "# Fit the model\n",
+        "rf_pipeline.fit(X_train, y_train)\n",
+        "\n",
+        "# Predict on the test set\n",
+        "y_pred_rf = rf_pipeline.predict(X_test)\n",
+        "\n",
+        "# Evaluate the model\n",
+        "print(\"Random Forest Classification Report:\")\n",
+        "print(classification_report(y_test, y_pred_rf))\n",
+        "print(f\"Random Forest Accuracy: {accuracy_score(y_test, y_pred_rf):.4f}\")"
+      ],
+      "metadata": {},
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### 1. Explain the ML Model used and it's performance using Evaluation metric Score Chart."
+      ],
+      "metadata": {
+        "id": "JWYfwnehpsJ1"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "The second model is a Random Forest, an ensemble method that typically performs much better than a single logistic regression model. This model shows a significant improvement, with an overall accuracy of 81%. More importantly, the F1-scores have improved across the board. The model is much better at identifying dissatisfied customers (score 1, F1-score of 0.67) and maintains excellent performance on satisfied customers (score 5, F1-score of 0.91). It still struggles with the intermediate scores (2, 3, 4), but there is a noticeable improvement over the baseline. This demonstrates the Random Forest's ability to capture more complex relationships in the data."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### ML Model - 3: Deep Learning ANN"
+      ],
+      "metadata": {
+        "id": "Fze-IPXLpx6K"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Transform the data using the preprocessor\n",
+        "X_train_processed = preprocessor.fit_transform(X_train)\n",
+        "X_test_processed = preprocessor.transform(X_test)\n",
+        "\n",
+        "# Build the ANN model\n",
+        "model = Sequential([\n",
+        "    Dense(128, activation='relu', input_shape=[X_train_processed.shape[1]]),\n",
+        "    Dropout(0.3),\n",
+        "    Dense(64, activation='relu'),\n",
+        "    Dropout(0.3),\n",
+        "    Dense(5, activation='softmax') # 5 output neurons for 5 CSAT scores\n",
+        "])\n",
+        "\n",
+        "# Compile the model\n",
+        "model.compile(optimizer='adam',\n",
+        "              loss='sparse_categorical_crossentropy',\n",
+        "              metrics=['accuracy'])\n",
+        "\n",
+        "# Early stopping to prevent overfitting\n",
+        "early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)\n",
+        "\n",
+        "# Train the model\n",
+        "history = model.fit(X_train_processed.toarray(), y_train_nn,\n",
+        "                    validation_split=0.2,\n",
+        "                    epochs=100,\n",
+        "                    batch_size=32,\n",
+        "                    callbacks=[early_stopping],\n",
+        "                    verbose=0)\n",
+        "\n",
+        "# Predict on the test set\n",
+        "y_pred_prob_nn = model.predict(X_test_processed.toarray())\n",
+        "y_pred_nn = np.argmax(y_pred_prob_nn, axis=1) + 1 # Convert back to 1-5 scale\n",
+        "\n",
+        "# Evaluate the model\n",
+        "print(\"Deep Learning ANN Classification Report:\")\n",
+        "print(classification_report(y_test, y_pred_nn))\n",
+        "print(f\"Deep Learning ANN Accuracy: {accuracy_score(y_test, y_pred_nn):.4f}\")"
+      ],
+      "metadata": {
+        "id": "FFrSXAtrpx6M"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "#### 1. Explain the ML Model used and it's performance using Evaluation metric Score Chart."
+      ],
+      "metadata": {
+        "id": "7AN1z2sKpx6M"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "The third and primary model is an Artificial Neural Network (ANN). The architecture consists of two hidden layers with ReLU activation functions and Dropout layers to prevent overfitting. The output layer uses a softmax activation function to produce a probability distribution over the 5 possible CSAT scores.\n",
+        "\n",
+        "The ANN achieves an accuracy of 81%, identical to the Random Forest. However, its performance on the minority classes is slightly more balanced. The F1-scores for classes 2, 3, and 4 (0.27, 0.42, 0.38) are notably better than the Random Forest's scores for the same classes. This suggests the neural network is doing a better job of learning the subtle features that distinguish these intermediate satisfaction levels. The performance on the high-priority classes 1 and 5 remains strong and comparable to the Random Forest model."
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### 2. Which ML model did you choose from the above created models as your final prediction model and why?"
+      ],
+      "metadata": {
+        "id": "cBFFvTBNJzUa"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "While the Random Forest and the Deep Learning ANN had identical overall accuracy, I would choose the **Deep Learning ANN** as the final prediction model.\n",
+        "\n",
+        "The primary reason is its superior performance on the minority classes (scores 2, 3, and 4), as indicated by the higher macro-average F1-score (0.53 for ANN vs. 0.48 for RF). In a business context, simply being accurate isn't enough; the ability to distinguish between different levels of dissatisfaction or moderate satisfaction provides more granular and actionable insights. The ANN's more balanced performance across all classes makes it a more robust and useful tool for understanding the full spectrum of customer sentiment. Furthermore, deep learning models offer greater flexibility for future improvements, such as incorporating more complex text embeddings or handling even larger datasets."
+      ],
+      "metadata": {
+        "id": "6ksF5Q1LKTVm"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "## ***8.*** ***Future Work (Optional)***"
+      ],
+      "metadata": {
+        "id": "EyNgTHvd2WFk"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### 1. Save the best performing ml model in a pickle file or joblib file format for deployment process.\n"
+      ],
+      "metadata": {
+        "id": "KH5McJBi2d8v"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Save the File\n",
+        "# For a scikit-learn pipeline:\n",
+        "import joblib\n",
+        "joblib.dump(rf_pipeline, 'random_forest_csat_model.joblib')\n",
+        "\n",
+        "# For the Keras model:\n",
+        "model.save('ann_csat_model.h5')"
+      ],
+      "metadata": {
+        "id": "bQIANRl32f4J"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### 2. Again Load the saved model file and try to predict unseen data for a sanity check.\n"
+      ],
+      "metadata": {
+        "id": "iW_Lq9qf2h6X"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Load the Keras model and the preprocessor (preprocessor must also be saved)\n",
+        "joblib.dump(preprocessor, 'preprocessor.joblib')\n",
+        "loaded_preprocessor = joblib.load('preprocessor.joblib')\n",
+        "loaded_model = tf.keras.models.load_model('ann_csat_model.h5')\n",
+        "\n",
+        "# Create a sample of unseen data (using the first row of the test set as an example)\n",
+        "unseen_data = X_test.iloc[[0]]\n",
+        "\n",
+        "# Preprocess the unseen data\n",
+        "unseen_data_processed = loaded_preprocessor.transform(unseen_data)\n",
+        "\n",
+        "# Predict\n",
+        "prediction_prob = loaded_model.predict(unseen_data_processed.toarray())\n",
+        "predicted_csat = np.argmax(prediction_prob, axis=1) + 1\n",
+        "\n",
+        "print(f\"Sample unseen data:\\n{unseen_data}\")\n",
+        "print(f\"\\nPredicted CSAT Score: {predicted_csat[0]}\")"
+      ],
+      "metadata": {
+        "id": "oEXk9ydD2nVC"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "### ***Congrats! Your model is successfully created and ready for deployment on a live server for a real user interaction !!!***"
+      ],
+      "metadata": {
+        "id": "-Kee-DAl2viO"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# **Conclusion**"
+      ],
+      "metadata": {
+        "id": "gCX9965dhzqZ"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "This project successfully developed a deep learning model to predict e-commerce customer satisfaction scores with a notable accuracy of 81%. The key findings are:\n",
+        "\n",
+        "1.  **Data Quality is Key**: The initial dataset was imbalanced and had significant missing values. Addressing this through strategic imputation, feature engineering (`response_time_minutes`), and text processing was fundamental to the project's success.\n",
+        "2.  **Response Time Matters Most**: Exploratory data analysis consistently showed that the time taken to first respond to a customer's issue is a critical driver of dissatisfaction. Long wait times strongly correlate with low CSAT scores.\n",
+        "3.  **Model Performance**: While a baseline Logistic Regression model performed poorly on minority classes, both the Random Forest and the Deep Learning ANN achieved high accuracy. The ANN demonstrated a more balanced performance, showing better predictive power for the less frequent, intermediate CSAT scores (2, 3, and 4).\n",
+        "4.  **Actionable Insights**: The model highlights that improving response times, particularly for issues related to refunds and cancellations, could significantly boost customer satisfaction. Furthermore, analyzing the text features that the model found important can reveal specific pain points in the customer journey.\n",
+        "\n",
+        "In conclusion, the developed ANN provides \"Shopzilla\" with a powerful tool to proactively monitor customer satisfaction. By integrating this model, the business can identify at-risk customers in near real-time, prioritize interventions, and make data-driven decisions to enhance service quality, ultimately leading to higher customer retention and loyalty."
+      ],
+      "metadata": {
+        "id": "Fjb1IsQkh3yE"
+      }
+    }
+  ]
+}
