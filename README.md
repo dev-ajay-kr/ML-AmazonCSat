@@ -252,10 +252,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-**Project Maintainer**: [Your Name]
-- **Email**: your.email@example.com
-- **LinkedIn**: [Your LinkedIn Profile](https://linkedin.com/in/yourprofile)
-- **GitHub**: [@your-username](https://github.com/your-username)
+**Project Maintainer**: Ajay Kumar Mahto
+- **GitHub**: [@your-username](https://[github.com/your-username](https://github.com/dev-ajay-kr))
 
 ## 🙏 Acknowledgments
 
